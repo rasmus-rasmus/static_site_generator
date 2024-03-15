@@ -34,5 +34,6 @@ class TestTextNode(unittest.TestCase):
         text_node_2 = TextNode("Test", "bold")
         self.assertNotEqual(text_node_1, text_node_2)
         
+        
 if __name__ == "__main__":
     unittest.main()
