@@ -9,7 +9,9 @@ from textnode import (
     text_type_link,
     text_type_image,
     text_node_to_html_node,
-    split_nodes_delimeter
+    split_nodes_delimeter,
+    extract_markdown_images,
+    extract_markdown_links
 )
 
 
@@ -165,6 +167,71 @@ class TestSplitNodesDelimeter(unittest.TestCase):
         self.assertEqual(new_nodes[1].text, "bold")
         self.assertEqual(new_nodes[3].text_type, text_type_bold)
         self.assertEqual(new_nodes[3].text, "This is **bold**")
+        
+class TestExtractMarkdownImages(unittest.TestCase):
+    def test_one_image(self):
+        raw_text = "This is an image: ![alt_text](https://url.url)"
+        images = extract_markdown_images(raw_text)
+        self.assertEqual(len(images), 1)
+        self.assertEqual(images[0], ("alt_text", "https://url.url"))
+        
+    def test_two_images(self):
+        raw_text = "This is an image: ![alt_text](https://url.url) and this is too: ![alt_text_too](https://url_too.url)"
+        images = extract_markdown_images(raw_text)
+        self.assertEqual(len(images), 2)
+        self.assertEqual(images[0], ("alt_text", "https://url.url"))
+        self.assertEqual(images[1], ("alt_text_too", "https://url_too.url"))
+        
+    def test_alt_text_containing_parenthesis(self):
+        raw_text = "This is an image: ![an (alternative) text](https://url.url)"
+        images = extract_markdown_images(raw_text)
+        self.assertEqual(len(images), 1)
+        self.assertEqual(images[0], ("an (alternative) text", "https://url.url"))
+        
+    def test_url_containing_sq_brackets(self):
+        raw_text = "This is an image: ![alt_text](https://url.url/5[tq)"
+        images = extract_markdown_images(raw_text)
+        self.assertEqual(len(images), 1)
+        self.assertEqual(images[0], ("alt_text", "https://url.url/5[tq"))
+        
+    def test_raw_text_containing_link(self):
+        raw_text = "This is an image: ![alt_text](https://url.url) and this is a link: [text](https://url.url)"
+        images = extract_markdown_images(raw_text)
+        self.assertEqual(len(images), 1)
+        self.assertEqual(images[0], ("alt_text", "https://url.url"))
+        
+class TestExtractMarkdownLinks(unittest.TestCase):
+    def test_one_link(self):
+        raw_text = "This is a link: [text](https://url.url)"
+        images = extract_markdown_links(raw_text)
+        self.assertEqual(len(images), 1)
+        self.assertEqual(images[0], ("text", "https://url.url"))
+        
+    def test_two_link(self):
+        raw_text = "This is a link: [text](https://url.url) and this is too: [text_too](https://url_too.url)"
+        images = extract_markdown_links(raw_text)
+        self.assertEqual(len(images), 2)
+        self.assertEqual(images[0], ("text", "https://url.url"))
+        self.assertEqual(images[1], ("text_too", "https://url_too.url"))
+        
+    def test_text_containing_parenthesis(self):
+        raw_text = "This is a link: [an (alternative) text](https://url.url)"
+        images = extract_markdown_links(raw_text)
+        self.assertEqual(len(images), 1)
+        self.assertEqual(images[0], ("an (alternative) text", "https://url.url"))
+        
+    def test_url_containing_sq_brackets(self):
+        raw_text = "This is a link: [text](https://url.url/5[tq)"
+        images = extract_markdown_links(raw_text)
+        self.assertEqual(len(images), 1)
+        self.assertEqual(images[0], ("text", "https://url.url/5[tq"))
+        
+    def test_raw_text_containing_image(self):
+        raw_text = "This is an image: ![alt_text](https://url.url) and this is a link: [text](https://url.url)"
+        images = extract_markdown_links(raw_text)
+        print(images)
+        self.assertEqual(len(images), 1)
+        self.assertEqual(images[0], ("text", "https://url.url"))
         
         
 if __name__ == "__main__":

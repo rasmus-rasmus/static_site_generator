@@ -1,4 +1,5 @@
 from htmlnode import LeafNode
+import re
 
 
 text_type_text = "text"
@@ -59,4 +60,14 @@ def split_nodes_delimeter(old_nodes, delimeter, text_type):
                 new_nodes += [TextNode(text=text, text_type=text_type)]
     
     return new_nodes
+
+
+def extract_markdown_images(text):
+    pattern = r"!\[(.*?)\]\((.*?)\)"
+    return re.findall(pattern=pattern, string=text)
+
+def extract_markdown_links(text):
+    pattern = r"(?<!!)\[(.*?)\]\((.*?)\)"
+    return re.findall(pattern=pattern, string=text)
+        
             
