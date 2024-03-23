@@ -2,6 +2,8 @@ import unittest
 
 from textnode import (
     TextNode,
+    split_nodes_images,
+    split_nodes_links,
     text_type_text,
     text_type_bold,
     text_type_italic,
@@ -229,9 +231,101 @@ class TestExtractMarkdownLinks(unittest.TestCase):
     def test_raw_text_containing_image(self):
         raw_text = "This is an image: ![alt_text](https://url.url) and this is a link: [text](https://url.url)"
         images = extract_markdown_links(raw_text)
-        print(images)
         self.assertEqual(len(images), 1)
         self.assertEqual(images[0], ("text", "https://url.url"))
+        
+        
+class TestSlitNodesImages(unittest.TestCase):
+    def test_one_image(self):
+        text_node = TextNode("This is an image: ![alt_text](https://image.url)", text_type_text)
+        image_nodes = split_nodes_images([text_node])
+        self.assertEqual(len(image_nodes), 2)
+        self.assertEqual(image_nodes[0].text, "This is an image: ")
+        self.assertEqual(image_nodes[0].text_type, text_type_text)
+        self.assertEqual(image_nodes[1].text, "alt_text")
+        self.assertEqual(image_nodes[1].text_type, text_type_image)
+        self.assertEqual(image_nodes[1].url, "https://image.url")
+        
+    def test_two_images(self):
+        text_node = TextNode("This is an image: ![alt_text](https://image.url), and this is another: ![alt_text1](https://image1.url)", text_type_text)
+        image_nodes = split_nodes_images([text_node])
+        self.assertEqual(len(image_nodes), 4)
+        self.assertEqual(image_nodes[0].text, "This is an image: ")
+        self.assertEqual(image_nodes[0].text_type, text_type_text)
+        self.assertEqual(image_nodes[2].text, ", and this is another: ")
+        self.assertEqual(image_nodes[2].text_type, text_type_text)
+        self.assertEqual(image_nodes[1].text_type, text_type_image)
+        self.assertEqual(image_nodes[3].text_type, text_type_image)
+        
+    def test_one_image_one_link(self):
+        text_node = TextNode("This is an image: ![alt_text](https://image.url), and this is a link: [text1](https://link.url)", text_type_text)
+        image_nodes = split_nodes_images([text_node])
+        self.assertEqual(len(image_nodes), 3)
+        self.assertEqual(image_nodes[0].text, "This is an image: ")
+        self.assertEqual(image_nodes[0].text_type, text_type_text)
+        self.assertEqual(image_nodes[2].text, ", and this is a link: [text1](https://link.url)")
+        self.assertEqual(image_nodes[2].text_type, text_type_text)
+        self.assertEqual(image_nodes[1].text_type, text_type_image)
+        
+    def test_one_image_no_prefix(self):
+        text_node = TextNode("![alt_text](https://image.url), and that was an image", text_type_text)
+        image_nodes = split_nodes_images([text_node])
+        self.assertEqual(len(image_nodes), 2)
+        self.assertEqual(image_nodes[0].text, "alt_text")
+        self.assertEqual(image_nodes[0].text_type, text_type_image)
+        self.assertEqual(image_nodes[0].url, "https://image.url")
+        self.assertEqual(image_nodes[1].text, ", and that was an image")
+        self.assertEqual(image_nodes[1].text_type, text_type_text)
+        
+    def test_no_images(self):
+        text_node = TextNode("This text contains no images", text_type_text)
+        image_nodes = split_nodes_images([text_node])
+        self.assertEqual(len(image_nodes), 1)
+        self.assertEqual(image_nodes[0].text_type, text_type_text)
+        self.assertEqual(image_nodes[0].text, "This text contains no images")
+
+
+class TestSlitNodesLinks(unittest.TestCase):
+    def test_one_link(self):
+        text_node = TextNode("This is a link: [text](https://link.url)", text_type_text)
+        image_nodes = split_nodes_links([text_node])
+        self.assertEqual(len(image_nodes), 2)
+        self.assertEqual(image_nodes[0].text, "This is a link: ")
+        self.assertEqual(image_nodes[0].text_type, text_type_text)
+        self.assertEqual(image_nodes[1].text, "text")
+        self.assertEqual(image_nodes[1].text_type, text_type_link)
+        self.assertEqual(image_nodes[1].url, "https://link.url")
+        
+    def test_two_links(self):
+        text_node = TextNode("This is a link: [text](https://link.url), and this is another: [text1](https://link1.url)", text_type_text)
+        image_nodes = split_nodes_links([text_node])
+        self.assertEqual(len(image_nodes), 4)
+        self.assertEqual(image_nodes[0].text, "This is a link: ")
+        self.assertEqual(image_nodes[0].text_type, text_type_text)
+        self.assertEqual(image_nodes[2].text, ", and this is another: ")
+        self.assertEqual(image_nodes[2].text_type, text_type_text)
+        self.assertEqual(image_nodes[1].text_type, text_type_link)
+        self.assertEqual(image_nodes[3].text_type, text_type_link)
+        
+    def test_one_link_one_image(self):
+        text_node = TextNode("This is a link: [text](https://link.url), and this is an image: ![alt_text](https://image.url)", text_type_text)
+        image_nodes = split_nodes_links([text_node])
+        self.assertEqual(len(image_nodes), 3)
+        self.assertEqual(image_nodes[0].text, "This is a link: ")
+        self.assertEqual(image_nodes[0].text_type, text_type_text)
+        self.assertEqual(image_nodes[2].text, ", and this is an image: ![alt_text](https://image.url)")
+        self.assertEqual(image_nodes[2].text_type, text_type_text)
+        self.assertEqual(image_nodes[1].text_type, text_type_link)
+        
+    def test_one_image_no_prefix(self):
+        text_node = TextNode("[text](https://link.url), and that was a link", text_type_text)
+        image_nodes = split_nodes_links([text_node])
+        self.assertEqual(len(image_nodes), 2)
+        self.assertEqual(image_nodes[0].text, "text")
+        self.assertEqual(image_nodes[0].text_type, text_type_link)
+        self.assertEqual(image_nodes[0].url, "https://link.url")
+        self.assertEqual(image_nodes[1].text, ", and that was a link")
+        self.assertEqual(image_nodes[1].text_type, text_type_text)
         
         
 if __name__ == "__main__":

@@ -69,5 +69,42 @@ def extract_markdown_images(text):
 def extract_markdown_links(text):
     pattern = r"(?<!!)\[(.*?)\]\((.*?)\)"
     return re.findall(pattern=pattern, string=text)
+
+def split_nodes_images(old_nodes):
+    new_nodes = []
+    for old_node in old_nodes:
+        if old_node.text_type != text_type_text:
+            new_nodes += [old_node]
+            continue
+        remaining_text = old_node.text
+        images = extract_markdown_images(old_node.text)
+        for image in images:
+            [prefix, remaining_text] = remaining_text.split(f"![{image[0]}]({image[1]})", 1)
+            if len(prefix):
+                new_nodes += [TextNode(prefix, text_type_text)]
+            new_nodes += [TextNode(image[0], text_type_image, image[1])]
+        if len(remaining_text):
+            new_nodes += [TextNode(remaining_text, text_type_text)]
+    
+    return new_nodes
+
+
+def split_nodes_links(old_nodes):
+    new_nodes = []
+    for old_node in old_nodes:
+        if old_node.text_type != text_type_text:
+            new_nodes += [old_node]
+            continue
+        remaining_text = old_node.text
+        links = extract_markdown_links(old_node.text)
+        for link in links:
+            [prefix, remaining_text] = remaining_text.split(f"[{link[0]}]({link[1]})", 1)
+            if len(prefix):
+                new_nodes += [TextNode(prefix, text_type_text)]
+            new_nodes += [TextNode(link[0], text_type_link, link[1])]
+        if len(remaining_text):
+            new_nodes += [TextNode(remaining_text, text_type_text)]
+    
+    return new_nodes
         
             
