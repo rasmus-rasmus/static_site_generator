@@ -107,4 +107,13 @@ def split_nodes_links(old_nodes):
     
     return new_nodes
         
-            
+
+def text_to_text_nodes(text):
+    text_node = [TextNode(text, text_type_text)]
+    images_extracted = split_nodes_images(text_node)
+    links_extracted = split_nodes_links(images_extracted)
+    bold_extracted = split_nodes_delimeter(links_extracted, "**", text_type_bold)
+    italic_extracted = split_nodes_delimeter(bold_extracted, "*", text_type_italic)
+    code_extracted = split_nodes_delimeter(italic_extracted, "`", text_type_code)
+    return code_extracted
+    
