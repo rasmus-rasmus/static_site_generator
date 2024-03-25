@@ -19,3 +19,13 @@ class TestMarkdownToBlocks(unittest.TestCase):
         self.assertEqual(blocks[0], "This is **bolded** paragraph")
         self.assertEqual(blocks[1], "This is another paragraph with *italic* text and `code` here\nThis is the same paragraph on a new line")
         self.assertEqual(blocks[2], "* This is a list\n* with items")
+        
+    def test_excessive_new_lines(self):
+        markdown = """This is a block
+        
+        
+        
+        and this is another"""
+        blocks = markdown_to_blocks(markdown)
+        
+        self.assertListEqual(blocks, ["This is a block", "and this is another"])
