@@ -1,3 +1,5 @@
+from htmlnode import ParentNode
+from inline_markdown import text_to_text_nodes
 from textnode import *
 
 from re import split as resplit
@@ -53,3 +55,58 @@ def block_to_block_type(block):
     
     # paragraph
     return block_type_paragraph
+
+    
+def paragraph_to_html_node(block):
+    children = [text_node_to_html_node(text_node) for text_node in text_to_text_nodes(block)]
+    return ParentNode("p", children)
+
+    
+def heading_to_html_node(block):
+    offset = block.find(" ")
+    children = [text_node_to_html_node(text_node) for text_node in text_to_text_nodes(block[offset+1:].strip())] 
+    return ParentNode(f"h{offset}", children)
+
+
+def code_block_to_html_node(block):
+    children = [text_node_to_html_node(text_node) for text_node in text_to_text_nodes(block[3:-3].strip())]
+    return ParentNode("pre", [ParentNode("code", children)])
+
+
+def quote_block_to_html_node(block):
+    raw_text = " ".join([line[1:].strip() for line in block.split("\n")])
+    children = [text_node_to_html_node(text_node) for text_node in text_to_text_nodes(raw_text)]
+    return ParentNode("blockquote", children)
+
+
+def ul_to_html_node(block):
+    list_items = [ParentNode("li", [text_node_to_html_node(text_node) for text_node in text_to_text_nodes(line[2:].strip())]) for line in block.split("\n")]
+    return ParentNode("ul", list_items)
+
+
+def ol_to_html_node(block):
+    list_items = [ParentNode("li", [text_node_to_html_node(text_node) for text_node in text_to_text_nodes(line[2:].strip())]) for line in block.split("\n")]
+    return ParentNode("ol", list_items)
+
+
+def block_to_html_node(block, block_type):
+    if block_type == block_type_paragraph:
+        return paragraph_to_html_node(block)
+
+    if block_type == block_type_heading:
+        return heading_to_html_node(block)
+    
+    if block_type == block_type_code:
+        return code_block_to_html_node(block)
+    
+    if block_type == block_type_quote:
+        return quote_block_to_html_node(block)
+    
+    if block_type == block_type_ul:
+        return ul_to_html_node(block)
+    
+    if block_type == block_type_ol:
+        return ol_to_html_node(block)
+    
+    raise RuntimeError("Unknown block type")
+            
