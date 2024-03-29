@@ -1,7 +1,11 @@
-from textnode import TextNode
+from shutil import rmtree
+from os.path import exists
+from copystatic import copy_static_files
+
 
 def main():
-    text_node = TextNode("This is a text node", "bold")
-    print(text_node)
+    if exists("public/"):
+        rmtree("public/")
+    copy_static_files("static/", "public/")
     
 main()
