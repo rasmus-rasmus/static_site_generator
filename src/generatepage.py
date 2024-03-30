@@ -1,4 +1,5 @@
-from os import path, makedirs
+from os import path, makedirs, listdir
+from pathlib import Path
 
 
 from markdown_to_html import markdown_to_html_node
@@ -26,3 +27,11 @@ def generate_page(from_path, template_path, dest_path):
     with open(dest_path, "w") as dst_file:
         dst_file.write(template)
         
+        
+def generate_pages_recursively(content_dir_path, template_path, dest_dir_path):
+    for item in listdir(content_dir_path):
+        src_path = Path(content_dir_path, item)
+        if src_path.is_file() and src_path.suffix == ".md":
+            generate_page(str(src_path), template_path, path.join(dest_dir_path, src_path.stem + ".html"))
+        else:
+            generate_pages_recursively(src_path, template_path, path.join(dest_dir_path, item))
