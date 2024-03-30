@@ -1,6 +1,6 @@
 from shutil import rmtree
 from os.path import exists
-from copystatic import copy_static_files
+from utils import copy_static_files
 
 
 def main():
